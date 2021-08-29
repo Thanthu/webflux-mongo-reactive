@@ -1,5 +1,7 @@
 package com.thanthu.webfluxmongoreactive.controllers;
 
+import static org.mockito.ArgumentMatchers.any;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -7,6 +9,7 @@ import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.reactivestreams.Publisher;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import com.thanthu.webfluxmongoreactive.domain.Category;
@@ -46,6 +49,17 @@ class CategoryControllerTest {
 
 		webTestClient.get().uri("/api/v1/categories/someid").exchange().expectBody(Category.class);
 
+	}
+
+	@Test
+	public void testCreateCateogry() {
+		BDDMockito.given(categoryRepository.saveAll(any(Mono.class)))
+				.willReturn(Flux.just(Category.builder().description("descrp").build()));
+
+		Mono<Category> catToSaveMono = Mono.just(Category.builder().description("Some Cat").build());
+
+		webTestClient.post().uri("/api/v1/categories").body(catToSaveMono, Category.class).exchange().expectStatus()
+				.isCreated();
 	}
 
 }
