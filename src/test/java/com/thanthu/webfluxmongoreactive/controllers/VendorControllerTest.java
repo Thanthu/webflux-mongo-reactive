@@ -1,6 +1,8 @@
 package com.thanthu.webfluxmongoreactive.controllers;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -72,5 +74,35 @@ class VendorControllerTest {
 		webTestClient.put().uri("/api/v1/vendors/someid").body(vendorMonoToUpdate, Vendor.class).exchange()
 				.expectStatus().isOk();
 
+	}
+
+	@Test
+	public void testPatchVendorWithChanges() {
+
+		BDDMockito.given(vendorRepository.findById(anyString()))
+				.willReturn(Mono.just(Vendor.builder().firstName("Jimmy").build()));
+
+		BDDMockito.given(vendorRepository.save(any(Vendor.class))).willReturn(Mono.just(Vendor.builder().build()));
+
+		Mono<Vendor> vendorMonoToUpdate = Mono.just(Vendor.builder().firstName("Jim").build());
+
+		webTestClient.patch().uri("/api/v1/vendors/someid").body(vendorMonoToUpdate, Vendor.class).exchange()
+				.expectStatus().isOk();
+
+		BDDMockito.verify(vendorRepository).save(any());
+	}
+
+	@Test
+	public void testPatchVendorWithoutChanges() {
+
+		BDDMockito.given(vendorRepository.findById(anyString()))
+				.willReturn(Mono.just(Vendor.builder().firstName("Jimmy").build()));
+
+		Mono<Vendor> vendorMonoToUpdate = Mono.just(Vendor.builder().firstName("Jimmy").build());
+
+		webTestClient.patch().uri("/api/v1/vendors/someid").body(vendorMonoToUpdate, Vendor.class).exchange()
+				.expectStatus().isOk();
+
+		BDDMockito.verify(vendorRepository, never()).save(any());
 	}
 }
